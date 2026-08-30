@@ -1,0 +1,118 @@
+bypass_hot_water_lock:
+  name: Suspend hot water block
+  description: >-
+    Suspends the hot water block for a given duration. Afterwards the normal
+    schedule applies again automatically. Calling this while a bypass is
+    already running only extends the remaining time - the original schedule
+    value stays memorised.
+  fields:
+    duration:
+      name: Duration
+      description: How long the block is suspended, in minutes.
+      required: false
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 1440
+          unit_of_measurement: min
+          mode: box
+    config_entry_id:
+      name: Device
+      description: >-
+        Only needed if several heat pumps are configured. Without it the
+        service applies to all of them.
+      required: false
+      selector:
+        config_entry:
+          integration: dimplex_nwpm
+
+cancel_hot_water_bypass:
+  name: End hot water bypass
+  description: >-
+    Ends a running bypass immediately and restores the original schedule
+    value.
+  fields:
+    config_entry_id:
+      name: Device
+      description: >-
+        Only needed if several heat pumps are configured. Without it the
+        service applies to all of them.
+      required: false
+      selector:
+        config_entry:
+          integration: dimplex_nwpm
+
+start_thermal_disinfection:
+  name: Start thermal disinfection now
+  description: >-
+    Rewrites the thermal disinfection schedule so the heat pump starts a run
+    within a few minutes. Once the heat pump reports that the run has finished
+    (it decides the duration itself, typically 1-2 hours) the original
+    schedule is restored automatically.
+  fields:
+    config_entry_id:
+      name: Device
+      description: >-
+        Only needed if several heat pumps are configured. Without it the
+        service applies to all of them.
+      required: false
+      selector:
+        config_entry:
+          integration: dimplex_nwpm
+
+cancel_thermal_disinfection:
+  name: Cancel thermal disinfection
+  description: >-
+    Stops supervising a manually started run and restores the original
+    schedule immediately. A disinfection cycle the heat pump has already
+    begun is not forcibly aborted by this.
+  fields:
+    config_entry_id:
+      name: Device
+      description: >-
+        Only needed if several heat pumps are configured. Without it the
+        service applies to all of them.
+      required: false
+      selector:
+        config_entry:
+          integration: dimplex_nwpm
+
+scan_registers:
+  name: Scan registers (diagnostic)
+  description: >-
+    Reads an address range and reports the results. On the second call it also
+    reports which addresses changed since the previous scan. This is how you
+    locate an undocumented datapoint: scan once, warm the probe by hand for a
+    minute or two, scan again - the address with the largest delta is the one
+    you are looking for. The scan is read-only.
+  fields:
+    start:
+      name: Start address
+      description: First address to read.
+      required: false
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 65535
+          mode: box
+    end:
+      name: End address
+      description: Last address to read (max. 256 addresses per scan).
+      required: false
+      default: 130
+      selector:
+        number:
+          min: 0
+          max: 65535
+          mode: box
+    config_entry_id:
+      name: Device
+      description: >-
+        A single heat pump must be specified for a scan if several are
+        configured.
+      required: false
+      selector:
+        config_entry:
+          integration: dimplex_nwpm

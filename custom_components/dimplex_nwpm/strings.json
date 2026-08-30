@@ -1,0 +1,87 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dimplex Heat Pump (NWPM Modbus TCP)",
+        "description": "Enter the IP address of the NWPM module and the Modbus parameters.",
+        "data": {
+          "host": "Host / IP address",
+          "port": "Port",
+          "slave": "Slave ID",
+          "scan_interval": "Poll interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Check the IP address and port.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This device is already configured."
+    }
+  },
+  "services": {
+    "bypass_hot_water_lock": {
+      "name": "Suspend hot water block",
+      "description": "Suspends the hot water block for a given duration, then automatically returns to the normal schedule.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "How long the block is suspended, in minutes."
+        },
+        "config_entry_id": {
+          "name": "Device",
+          "description": "Only needed if several heat pumps are configured."
+        }
+      }
+    },
+    "cancel_hot_water_bypass": {
+      "name": "End hot water bypass",
+      "description": "Ends a running bypass immediately and restores the original schedule value.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Device",
+          "description": "Only needed if several heat pumps are configured."
+        }
+      }
+    },
+    "start_thermal_disinfection": {
+      "name": "Start thermal disinfection now",
+      "description": "Rewrites the schedule so the heat pump starts a disinfection run within a few minutes. The original schedule is restored automatically once the run has finished.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Device",
+          "description": "Only needed if several heat pumps are configured."
+        }
+      }
+    },
+    "cancel_thermal_disinfection": {
+      "name": "Cancel thermal disinfection",
+      "description": "Stops supervising a manually started run and restores the original schedule immediately.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Device",
+          "description": "Only needed if several heat pumps are configured."
+        }
+      }
+    },
+    "scan_registers": {
+      "name": "Scan registers (diagnostic)",
+      "description": "Reads an address range and, on the second call, reports which addresses changed. Useful for locating undocumented datapoints.",
+      "fields": {
+        "start": {
+          "name": "Start address",
+          "description": "First address to read."
+        },
+        "end": {
+          "name": "End address",
+          "description": "Last address to read (max. 256 per scan)."
+        },
+        "config_entry_id": {
+          "name": "Device",
+          "description": "A single heat pump must be specified for a scan."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,225 @@
+# =============================================================================
+# Dimplex Heat Pump - dashboard card
+# =============================================================================
+# How to use: Dashboard -> Edit (pencil) -> Add card -> scroll to the bottom ->
+#             "Manual" -> paste this block.
+#
+# Only built-in Home Assistant cards are used, so nothing has to be installed
+# from HACS.
+#
+# CHECK YOUR ENTITY IDs:
+# The IDs below assume the device name "Dimplex Heat Pump". If you set the
+# integration up before version 0.6.0 your entity IDs are probably still the
+# older German ones (sensor.dimplex_warmepumpe_aussentemperatur and so on) -
+# entity IDs are assigned once and do not change on their own. Look them up
+# under Settings -> Devices & services -> Dimplex NWPM -> device.
+#
+# NOTE for Home Assistant older than 2024.8:
+# There the keys are still called "call-service" instead of "perform-action"
+# and "service:" instead of "perform_action:". If the confirmation rows below
+# throw an error, rename them accordingly - everything else stays the same.
+#
+# TIP: to skip the confirmation for specific people, add this below
+# "confirmation:":
+#   exemptions:
+#     - user: <user ID from Settings -> People>
+# =============================================================================
+
+type: vertical-stack
+cards:
+  # --- temperatures at a glance -------------------------------------------
+  - type: glance
+    title: Dimplex Heat Pump
+    show_state: true
+    columns: 2
+    entities:
+      - entity: sensor.dimplex_heat_pump_outside_temperature
+        name: Outside
+      - entity: sensor.dimplex_heat_pump_hot_water_temperature
+        name: Hot water
+
+  # --- controls ------------------------------------------------------------
+  - type: entities
+    show_header_toggle: false
+    entities:
+      - entity: select.dimplex_heat_pump_operating_mode
+        name: Operating mode
+        icon: mdi:heat-pump
+
+      - entity: number.dimplex_heat_pump_hot_water_target_temperature
+        name: Hot water setpoint
+        icon: mdi:thermometer-water
+
+      - type: divider
+
+      # One press = hot water for the next hour, then back to the schedule.
+      - entity: button.dimplex_heat_pump_suspend_hot_water_block_for_60_minutes
+        name: Release hot water now
+        icon: mdi:water-boiler-off
+
+      # Shows whether a bypass is running. Turning it off ends it immediately.
+      - entity: switch.dimplex_heat_pump_hot_water_block_suspended
+        name: Block suspended
+        secondary_info: last-changed
+
+      - type: divider
+
+      # Starts a disinfection run in ~2 minutes. The heat pump decides the
+      # duration itself; afterwards the original schedule is restored.
+      #
+      # Important: this is deliberately NOT a plain entity row. On an entity
+      # row the "press" button fires immediately and skips tap_action - and
+      # with it the confirmation. This row calls the service directly instead.
+      - type: button
+        entity: button.dimplex_heat_pump_start_thermal_disinfection_now
+        name: Thermal disinfection
+        icon: mdi:water-thermometer
+        action_name: Start
+        tap_action:
+          action: perform-action
+          perform_action: dimplex_nwpm.start_thermal_disinfection
+          confirmation:
+            title: Start thermal disinfection?
+            text: >-
+              The heat pump will heat the domestic hot water to the configured
+              disinfection temperature (60-85 °C) and decides the duration
+              itself, typically 1-2 hours. Once a run has started it cannot be
+              aborted from Home Assistant.
+            confirm_text: Yes, start
+            dismiss_text: Cancel
+
+      - entity: binary_sensor.dimplex_heat_pump_thermal_disinfection_manual_run
+        name: Disinfection (manual run)
+        secondary_info: last-changed
+
+      # Stops supervision and restores the schedule right away. A cycle the
+      # heat pump has already begun is NOT stopped by this - see README.
+      - type: button
+        entity: binary_sensor.dimplex_heat_pump_thermal_disinfection_manual_run
+        name: Cancel manual run
+        icon: mdi:close-circle-outline
+        action_name: Cancel
+        tap_action:
+          action: perform-action
+          perform_action: dimplex_nwpm.cancel_thermal_disinfection
+          confirmation:
+            title: Cancel the manual run?
+            text: >-
+              Restores the original schedule. If the heat pump has already
+              started the run, it will still finish it.
+            confirm_text: Yes, cancel
+            dismiss_text: Back
+
+  # --- remaining time, only while a bypass is running ----------------------
+  # Home Assistant evaluates templates even while a conditional card is
+  # hidden, so this has to cope with 'ends_at' being None.
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: switch.dimplex_heat_pump_hot_water_block_suspended
+        state: "on"
+    card:
+      type: markdown
+      content: >-
+        {% set ends = state_attr('switch.dimplex_heat_pump_hot_water_block_suspended',
+        'ends_at') %} {% if ends %} 🚿 **Hot water block suspended** – the
+        normal schedule resumes at {{ as_timestamp(ends) |
+        timestamp_custom('%H:%M', true) }}. {% else %} 🚿 **Hot water block
+        suspended** {% endif %}
+
+# =============================================================================
+# OPTIONAL: a second card for the schedules
+# -----------------------------------------------------------------------------
+# Add as another card (again via "Manual").
+# =============================================================================
+#
+# type: entities
+# title: Schedules
+# show_header_toggle: false
+# entities:
+#   - type: section
+#     label: Hot water block
+#   - entity: time.dimplex_heat_pump_hot_water_block_window_1_start
+#     name: Window 1 start
+#   - entity: time.dimplex_heat_pump_hot_water_block_window_1_end
+#     name: Window 1 end
+#   - entity: time.dimplex_heat_pump_hot_water_block_window_2_start
+#     name: Window 2 start
+#   - entity: time.dimplex_heat_pump_hot_water_block_window_2_end
+#     name: Window 2 end
+#
+#   - type: section
+#     label: Thermal disinfection
+#   - entity: time.dimplex_heat_pump_thermal_disinfection_start_time
+#     name: Start time
+#   - entity: number.dimplex_heat_pump_thermal_disinfection_temperature
+#     name: Temperature
+#
+#   - type: section
+#     label: Circulation pump
+#   - entity: time.dimplex_heat_pump_circulation_pump_window_1_start
+#     name: Window 1 start
+#   - entity: time.dimplex_heat_pump_circulation_pump_window_1_end
+#     name: Window 1 end
+#
+#   - type: section
+#     label: Heating circuit 1
+#   - entity: number.dimplex_heat_pump_hc1_setback_setback_value
+#     name: Setback value
+#   - entity: number.dimplex_heat_pump_hc1_boost_boost_value
+#     name: Boost value
+#
+#   - type: divider
+#   - entity: button.dimplex_heat_pump_refresh_schedules
+#     name: Re-read from device
+#
+# =============================================================================
+# OPTIONAL: example automations
+# =============================================================================
+#
+# Release hot water for 90 minutes when someone gets home:
+#
+# alias: Release hot water on arrival
+# triggers:
+#   - trigger: state
+#     entity_id: person.alex
+#     to: home
+# conditions:
+#   - condition: time
+#     after: "16:00:00"
+#     before: "22:00:00"
+# actions:
+#   - action: dimplex_nwpm.bypass_hot_water_lock
+#     data:
+#       duration: 90
+# mode: single
+#
+# -----------------------------------------------------------------------------
+# Start a disinfection run from an automation (e.g. on solar surplus):
+#
+# alias: Disinfection on solar surplus
+# triggers:
+#   - trigger: numeric_state
+#     entity_id: sensor.pv_surplus
+#     above: 3000
+#     for: "00:15:00"
+# actions:
+#   - action: dimplex_nwpm.start_thermal_disinfection
+# mode: single
+#
+# -----------------------------------------------------------------------------
+# React to the end of a run. The integration fires these events:
+#   dimplex_nwpm_thermal_disinfection_triggered  (run scheduled)
+#   dimplex_nwpm_thermal_disinfection_running    (heat pump has started)
+#   dimplex_nwpm_thermal_disinfection_finished   (data: reason)
+#     reason: completed | not_started | timeout | cancelled
+#
+# alias: Notify when disinfection finished
+# triggers:
+#   - trigger: event
+#     event_type: dimplex_nwpm_thermal_disinfection_finished
+# actions:
+#   - action: notify.persistent_notification
+#     data:
+#       message: >-
+#         Thermal disinfection finished ({{ trigger.event.data.reason }}).

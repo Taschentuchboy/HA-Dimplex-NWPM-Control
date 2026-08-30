@@ -1,0 +1,87 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dimplex Wärmepumpe (NWPM Modbus TCP)",
+        "description": "IP-Adresse des NWPM-Moduls sowie Modbus-Parameter eingeben.",
+        "data": {
+          "host": "Host / IP-Adresse",
+          "port": "Port",
+          "slave": "Slave-ID",
+          "scan_interval": "Abfrageintervall (Sekunden)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen. IP-Adresse und Port prüfen.",
+      "unknown": "Unerwarteter Fehler."
+    },
+    "abort": {
+      "already_configured": "Dieses Gerät ist bereits konfiguriert."
+    }
+  },
+  "services": {
+    "bypass_hot_water_lock": {
+      "name": "Warmwassersperre aussetzen",
+      "description": "Setzt die Warmwassersperre für eine bestimmte Dauer aus. Danach greift automatisch wieder der normale Zeitplan.",
+      "fields": {
+        "duration": {
+          "name": "Dauer",
+          "description": "Dauer in Minuten, für die die Sperre ausgesetzt wird."
+        },
+        "config_entry_id": {
+          "name": "Gerät",
+          "description": "Nur nötig, wenn mehrere Wärmepumpen eingerichtet sind."
+        }
+      }
+    },
+    "cancel_hot_water_bypass": {
+      "name": "Warmwassersperre-Bypass beenden",
+      "description": "Beendet einen laufenden Bypass sofort und stellt den ursprünglichen Zeitplanwert wieder her.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Gerät",
+          "description": "Nur nötig, wenn mehrere Wärmepumpen eingerichtet sind."
+        }
+      }
+    },
+    "start_thermal_disinfection": {
+      "name": "Thermische Desinfektion jetzt starten",
+      "description": "Stellt den Zeitplan so um, dass die Wärmepumpe die Desinfektion in wenigen Minuten startet. Nach Ende des Laufs wird der ursprüngliche Zeitplan automatisch wiederhergestellt.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Gerät",
+          "description": "Nur nötig, wenn mehrere Wärmepumpen eingerichtet sind."
+        }
+      }
+    },
+    "cancel_thermal_disinfection": {
+      "name": "Thermische Desinfektion abbrechen",
+      "description": "Bricht die Überwachung eines manuell gestarteten Laufs ab und stellt den ursprünglichen Zeitplan sofort wieder her.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Gerät",
+          "description": "Nur nötig, wenn mehrere Wärmepumpen eingerichtet sind."
+        }
+      }
+    },
+    "scan_registers": {
+      "name": "Register scannen (Diagnose)",
+      "description": "Liest einen Adressbereich aus und zeigt beim zweiten Aufruf an, welche Adressen sich verändert haben. Damit lassen sich undokumentierte Datenpunkte finden.",
+      "fields": {
+        "start": {
+          "name": "Startadresse",
+          "description": "Erste zu lesende Adresse."
+        },
+        "end": {
+          "name": "Endadresse",
+          "description": "Letzte zu lesende Adresse (max. 256 pro Scan)."
+        },
+        "config_entry_id": {
+          "name": "Gerät",
+          "description": "Beim Scan muss eine einzelne Wärmepumpe angegeben werden."
+        }
+      }
+    }
+  }
+}
